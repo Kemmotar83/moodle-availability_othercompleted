@@ -54,8 +54,11 @@ class frontend extends \core_availability\frontend {
             //get all course name
             $datcms = array();
             global $DB;
-            $sql2 = "SELECT * FROM {course} 
-                    ORDER BY fullname ASC";
+            $sql2 = "SELECT C.id, C.fullname, C.shortname, C.category FROM {course} C LEFT JOIN
+                        {course_completion_criteria} CC ON (C.id = CC.course)
+                     WHERE CC.id IS NOT NULL
+                     GROUP BY C.id , C.fullname, C.shortname, C.category
+                     ORDER BY C.shortname ASC";
             $other = $DB->get_records_sql($sql2);
             //$other = get_courses();
             foreach ($other as $othercm) {
@@ -63,7 +66,9 @@ class frontend extends \core_availability\frontend {
                 if(($othercm->category > 0) && ($othercm->id != $course->id)){
                         $datcms[] = (object)array(
                             'id' => $othercm->id,
-                            'name' => format_string($othercm->fullname, true, array('context' => $context))
+                            'name' => format_string(get_string('courseextendednamedisplay','',
+                                    ['shortname' => $othercm->shortname, 'fullname' => $othercm->fullname]),
+                                true, array('context' => $context))
                             // 'completiongradeitemnumber' => $othercm->completiongradeitemnumber
                         );
                 }

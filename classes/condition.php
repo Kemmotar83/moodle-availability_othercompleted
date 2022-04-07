@@ -80,19 +80,17 @@ class condition extends \core_availability\condition {
     }
 
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
-        //get course completion details to allow preview
+        // Get course completion details to allow preview.
 
         global $DB;
 
         $course = $this->cmid;
         $user = $DB->get_record('course_completions', array('userid'=> $userid, 'course'=> $course));
 
-        //if data is available means user has been completed course
-        if($user->id > 0 && $user->timecompleted != NULL){
-
+        // If data is available means user has been completed course.
+        if($user && $user->id > 0 && $user->timecompleted !== NULL){
             $allow = true;
-        }
-        else{
+        } else {
             $allow = false;
         }
 
@@ -125,9 +123,10 @@ class condition extends \core_availability\condition {
 
     //get details restrict access
     public function get_description($full, $not, \core_availability\info $info) {
-      global $DB;
-        // Get name for module.
-        $modname = $DB->get_record('course', ['id' => $this->cmid])->fullname;
+        // Get name for course.
+        $course = get_course($this->cmid);
+        $courseurl = new \moodle_url('/course/view.php', ['id' => $this->cmid]);
+        $expectedcourse = \html_writer::link($courseurl, format_string($course->fullname));
 
         // Work out which lang string to use.
         if ($not) {
@@ -148,7 +147,7 @@ class condition extends \core_availability\condition {
             $str = 'requires_' . self::get_lang_string_keyword($this->expectedcompletion);
         }
 
-        return get_string($str, 'availability_othercompleted', $modname);
+        return get_string($str, 'availability_othercompleted', $expectedcourse);
     }
 
     protected function get_debug_string() {
@@ -163,27 +162,6 @@ class condition extends \core_availability\condition {
                 throw new \coding_exception('Unexpected expected completion');
         }
         return 'cm' . $this->cmid . ' ' . $type;
-    }
-
-    public function update_after_restore($restoreid, $courseid, \base_logger $logger, $name) {
-        global $DB;
-        $rec = \restore_dbops::get_backup_ids_record($restoreid, 'course_module', $this->cmid);
-        if (!$rec || !$rec->newitemid) {
-            // If we are on the same course (e.g. duplicate) then we can just
-            // use the existing one.
-            if ($DB->record_exists('course_modules',
-                    array('id' => $this->cmid, 'course' => $courseid))) {
-                return false;
-            }
-            // Otherwise it's a warning.
-            $this->cmid = 0;
-            $logger->process('Restored item (' . $name .
-                    ') has availability condition on module that was not restored',
-                    \backup::LOG_WARNING);
-        } else {
-            $this->cmid = (int)$rec->newitemid;
-        }
-        return true;
     }
 
     /**
