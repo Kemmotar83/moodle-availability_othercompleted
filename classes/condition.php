@@ -87,8 +87,9 @@ class condition extends \core_availability\condition {
         $course = $this->cmid;
         $user = $DB->get_record('course_completions', array('userid'=> $userid, 'course'=> $course));
 
-        // If data is available means user has been completed course.
-        if($user && $user->id > 0 && $user->timecompleted !== NULL){
+        //if data is available means user has been completed course
+        if(isset($user->id) && $user->id > 0 && $user->timecompleted != NULL) {
+
             $allow = true;
         } else {
             $allow = false;
@@ -162,6 +163,27 @@ class condition extends \core_availability\condition {
                 throw new \coding_exception('Unexpected expected completion');
         }
         return 'cm' . $this->cmid . ' ' . $type;
+    }
+
+    public function update_after_restore($restoreid, $courseid, \base_logger $logger, $name) {
+        global $DB;
+        $rec = \restore_dbops::get_backup_ids_record($restoreid, 'course_module', $this->cmid);
+        if (!$rec || !$rec->newitemid) {
+            // If we are on the same course (e.g. duplicate) then we can just
+            // use the existing one.
+            if ($DB->record_exists('course_modules',
+                    array('id' => $this->cmid, 'course' => $courseid))) {
+                return false;
+            }
+            // Otherwise it's a warning.
+            $this->cmid = 0;
+            $logger->process('Restored item (' . $name .
+                    ') has availability condition on module that was not restored',
+                    \backup::LOG_WARNING);
+        } else {
+            $this->cmid = (int)$rec->newitemid;
+        }
+        return true;
     }
 
     /**
