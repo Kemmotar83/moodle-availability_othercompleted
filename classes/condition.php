@@ -80,26 +80,19 @@ class condition extends \core_availability\condition {
     }
 
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
-        // Get course completion details to allow preview.
-
+        
         global $DB;
 
         $course = $this->cmid;
-        $user = $DB->get_record('course_completions', array('userid'=> $userid, 'course'=> $course));
+        $sqlcoursecomplete = "SELECT * FROM {course_completions} as a WHERE a.course = $course AND a.userid = $userid";
+        $datacompletes = $DB->get_records_sql($sqlcoursecomplete);
+        $allow = false;
+        foreach($datacompletes as $datacomplete){
 
-        //if data is available means user has been completed course
-        if(isset($user->id) && $user->id > 0 && $user->timecompleted !== NULL) {
-
-            $allow = true;
-        } else {
-            $allow = false;
+            if($datacomplete->timecompleted>0){
+                $allow = true; 
+            }
         }
-
-        // Check expected completion use has not complete the course
-        if ($this->expectedcompletion === 0) {
-            $allow = !$allow;
-        }
-
         return $allow;
     }
 
@@ -122,12 +115,15 @@ class condition extends \core_availability\condition {
         }
     }
 
-    //get details restrict access
     public function get_description($full, $not, \core_availability\info $info) {
-        // Get name for course.
-        $course = get_course($this->cmid);
-        $courseurl = new \moodle_url('/course/view.php', ['id' => $this->cmid]);
-        $expectedcourse = \html_writer::link($courseurl, format_string($course->fullname));
+        // Get name for module.
+        $modc = get_courses();
+
+        foreach ($modc as $modcs) {
+            if($modcs->id == $this->cmid){
+                $modname = $modcs->fullname;
+            }
+        }
 
         // Work out which lang string to use.
         if ($not) {
@@ -147,8 +143,8 @@ class condition extends \core_availability\condition {
         } else {
             $str = 'requires_' . self::get_lang_string_keyword($this->expectedcompletion);
         }
-
-        return get_string($str, 'availability_othercompleted', $expectedcourse);
+        
+        return get_string($str, 'availability_othercompleted', $modname);
     }
 
     protected function get_debug_string() {

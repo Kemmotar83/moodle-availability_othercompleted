@@ -38,7 +38,7 @@ class frontend extends \core_availability\frontend {
     protected $cachekey = '';
 
     protected function get_javascript_strings() {
-        return array('option_complete', 'option_incomplete', 'label_cm', 'label_completion');
+        return array('option_complete', 'label_cm', 'label_completion');
     }
 
     protected function get_javascript_init_params($course, \cm_info $cm = null,
@@ -51,7 +51,7 @@ class frontend extends \core_availability\frontend {
             // Get list of activities on course which have completion values,
             // to fill the dropdown.
             $context = \context_course::instance($course->id);
-            //get all course name
+            // get all course name
             $datcms = array();
             global $DB;
             $sql2 = "SELECT C.id, C.fullname, C.shortname, C.category FROM {course} C LEFT JOIN
@@ -60,9 +60,9 @@ class frontend extends \core_availability\frontend {
                      GROUP BY C.id , C.fullname, C.shortname, C.category
                      ORDER BY C.shortname ASC";
             $other = $DB->get_records_sql($sql2);
-            //$other = get_courses();
+            // $other = get_courses();
             foreach ($other as $othercm) {
-                //disable not created course and default course
+                // disable not created course and default course
                 if(($othercm->category > 0) && ($othercm->id != $course->id)){
                         $datcms[] = (object)array(
                             'id' => $othercm->id,
