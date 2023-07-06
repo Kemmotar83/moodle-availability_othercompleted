@@ -116,14 +116,10 @@ class condition extends \core_availability\condition {
     }
 
     public function get_description($full, $not, \core_availability\info $info) {
-        // Get name for module.
-        $modc = get_courses();
-
-        foreach ($modc as $modcs) {
-            if($modcs->id == $this->cmid){
-                $modname = $modcs->fullname;
-            }
-        }
+        // Get name for course.
+        $course = get_course($this->cmid);
+        $courseurl = new \moodle_url('/course/view.php', ['id' => $this->cmid]);
+        $expectedcourse = \html_writer::link($courseurl, format_string($course->fullname));
 
         // Work out which lang string to use.
         if ($not) {
@@ -143,8 +139,8 @@ class condition extends \core_availability\condition {
         } else {
             $str = 'requires_' . self::get_lang_string_keyword($this->expectedcompletion);
         }
-        
-        return get_string($str, 'availability_othercompleted', $modname);
+
+        return get_string($str, 'availability_othercompleted', $expectedcourse);
     }
 
     protected function get_debug_string() {
