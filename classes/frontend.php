@@ -27,15 +27,16 @@ namespace availability_othercompleted;
 defined('MOODLE_INTERNAL') || die();
 
 class frontend extends \core_availability\frontend {
-    /**
-     * @var array Cached init parameters
-     */
-    protected $cacheparams = array();
 
     /**
      * @var string IDs of course, cm, and section for cache (if any)
      */
     protected $cachekey = '';
+
+    /**
+     * @var array Cached init parameters (if any) to be used in the cache (if any)
+     */
+    protected $cacheinitparams = [];
 
     protected function get_javascript_strings() {
         return array('option_complete', 'label_cm', 'label_completion');
